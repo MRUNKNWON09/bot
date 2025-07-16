@@ -1,20 +1,21 @@
-import express from 'express';
-import fetch from 'node-fetch';
+import express from "express";
+import fetch from "node-fetch";
+import { createServer } from "@vercel/node";
 
 const app = express();
 app.use(express.json());
 
-const VERIFY_TOKEN = "rafi_secret_123"; // তুমি Facebook Webhook এ এই token বসাবে
-const PAGE_ACCESS_TOKEN = "EAAPpWjZB0NBUBPCVXNfM5iAxRhBTJMDSsBD7WmIULk0w1BZCdH3u6J0ZBn3jXdrQsmV5JWiRIfZBwKfCMOt0lZBzZANm2J3wVVNv0iG0Op9Jeol13XJzXWBZBgmv0y36uLvswiDBr7z0bz72RPaZCwLkqN1DyxmZCCAm4ZCqL5Y0WE86smOnZBk0r6ZAfrvXaZCVHzOwvZAivkrgZDZD";
+const VERIFY_TOKEN = "rafi_secret_123";
+const PAGE_ACCESS_TOKEN = "EAAPpWjZB0NBUBPCVXNfM5iAxRhBTJMDSsBD7WmIULk0w1BZCdH3u6J0ZBn3jXdrQsmV5JWiRIfZBwKfCMOt0lZBzZANm2J3wVVNv0iG0Op9Jeol13XJzXWBZBgmv0y36uLvswiDBr7z0bz72RPaZCwLkqN1DyxmZCCAm4ZCqL5Y0WE86smOnZBk0r6ZAfrvXaZCVHzOwvZAivkrgZDZD"; // তোমার টোকেন
 
-app.get('/api/webhook', (req, res) => {
-  const mode = req.query['hub.mode'];
-  const token = req.query['hub.verify_token'];
-  const challenge = req.query['hub.challenge'];
+app.get("/", (req, res) => {
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
 
   if (mode && token) {
-    if (mode === 'subscribe' && token === VERIFY_TOKEN) {
-      console.log('WEBHOOK_VERIFIED');
+    if (mode === "subscribe" && token === VERIFY_TOKEN) {
+      console.log("WEBHOOK_VERIFIED");
       res.status(200).send(challenge);
     } else {
       res.sendStatus(403);
@@ -22,10 +23,10 @@ app.get('/api/webhook', (req, res) => {
   }
 });
 
-app.post('/api/webhook', async (req, res) => {
+app.post("/", async (req, res) => {
   const body = req.body;
 
-  if (body.object === 'page') {
+  if (body.object === "page") {
     for (const entry of body.entry) {
       const webhook_event = entry.messaging[0];
       const sender_psid = webhook_event.sender.id;
@@ -46,7 +47,7 @@ app.post('/api/webhook', async (req, res) => {
         }
       }
     }
-    res.status(200).send('EVENT_RECEIVED');
+    res.status(200).send("EVENT_RECEIVED");
   } else {
     res.sendStatus(404);
   }
@@ -55,13 +56,13 @@ app.post('/api/webhook', async (req, res) => {
 async function callSendAPI(sender_psid, response) {
   const request_body = {
     recipient: { id: sender_psid },
-    message: { text: response }
+    message: { text: response },
   };
 
   await fetch(`https://graph.facebook.com/v16.0/me/messages?access_token=${PAGE_ACCESS_TOKEN}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(request_body)
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request_body),
   });
 }
 
